@@ -169,6 +169,22 @@ def list_uploaded_images(
     )
 
 
+@router.options("/upload")
+async def upload_options():
+    """Handle CORS preflight for file uploads."""
+    origin = ", ".join(settings.backend_cors_origins) if settings.backend_cors_origins != ["*"] else "*"
+    return Response(
+        status_code=204,
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": ", ".join(settings.cors_allow_methods),
+            "Access-Control-Allow-Headers": ", ".join(settings.cors_allow_headers),
+            "Access-Control-Max-Age": "600",
+        },
+    )
+
+
+
 @router.post(
     "/upload",
     response_model=ImageUploadResponse | ImageUploadQueuedResponse,
@@ -381,6 +397,8 @@ def delete_uploaded_image(
     )
 
 
+
+
 @router.post("/bulk-delete", response_model=ImageBulkDeleteResponse)
 def bulk_delete_uploaded_images(
     payload: ImageBulkDeleteRequest = Body(...),
@@ -457,5 +475,7 @@ def bulk_delete_uploaded_images(
         total_failed=failed_count,
         results=results,
     )
+
+
 
 
