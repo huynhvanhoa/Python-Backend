@@ -5,7 +5,7 @@ import uuid
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.api.routes.upload import router as upload_router
 from app.core.config import settings
@@ -19,11 +19,27 @@ error_logger = logging.getLogger("app.error")
 
 app = FastAPI(title=settings.app_name)
 
+# Handle OPTIONS preflight explicitly before CORS middleware (workaround for Render/Cloudflare)
+@app.middleware("http")
+async def handle_options_preflight(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": ", ".join(settings.backend_cors_origins) if settings.backend_cors_origins != ["*"] else "*",
+                "Access-Control-Allow-Methods": ", ".join(settings.cors_allow_methods),
+                "Access-Control-Allow-Headers": ", ".join(settings.cors_allow_headers),
+                "Access-Control-Max-Age": "600",
+            },
+        )
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.backend_cors_origins,
     allow_methods=settings.cors_allow_methods,
     allow_headers=settings.cors_allow_headers,
+    allow_credentials=True,
 )
 
 
