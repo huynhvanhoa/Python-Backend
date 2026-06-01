@@ -249,19 +249,6 @@ async def upload_admin_image(
     return asset
 
 
-@router.options("/upload")
-def upload_options():
-    # Temporary explicit OPTIONS handler to ensure CORS preflight succeeds
-    allow_origins = settings.backend_cors_origins
-    origin_value = "*"
-    if isinstance(allow_origins, list) and len(allow_origins) == 1 and allow_origins[0] != "*":
-        origin_value = allow_origins[0]
-
-    return Response(
-        status_code=204,
-        headers={
-            "Access-Control-Allow-Origin": origin_value,
-            "Access-Control-Allow-Methods": ",".join(settings.cors_allow_methods),
             "Access-Control-Allow-Headers": ",".join(settings.cors_allow_headers),
         },
     )
@@ -470,3 +457,5 @@ def bulk_delete_uploaded_images(
         total_failed=failed_count,
         results=results,
     )
+
+
