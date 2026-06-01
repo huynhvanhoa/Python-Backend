@@ -19,20 +19,6 @@ error_logger = logging.getLogger("app.error")
 
 app = FastAPI(title=settings.app_name)
 
-# Add OPTIONS middleware BEFORE anything else processes the request
-@app.middleware("http")
-async def handle_options_preflight(request: Request, call_next):
-    """Intercept OPTIONS requests for CORS preflight before route matching."""
-    if request.method == "OPTIONS":
-        cors_headers = {
-            "Access-Control-Allow-Origin": ", ".join(settings.backend_cors_origins) if settings.backend_cors_origins != ["*"] else "*",
-            "Access-Control-Allow-Methods": ", ".join(settings.cors_allow_methods),
-            "Access-Control-Allow-Headers": ", ".join(settings.cors_allow_headers),
-            "Access-Control-Max-Age": "600",
-        }
-        return Response(status_code=204, headers=cors_headers)
-    return await call_next(request)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.backend_cors_origins,
@@ -88,6 +74,18 @@ async def request_id_and_access_log_middleware(request: Request, call_next):
 
 
 app.include_router(upload_router, prefix=settings.api_v1_prefix)
+
+
+@app.api_route("/{full_path:path}", methods=["OPTIONS"])
+async def handle_all_options(full_path: str):
+    """Catch-all OPTIONS handler with explicit route to beat implicit route matching."""
+    cors_headers = {
+        "Access-Control-Allow-Origin": ", ".join(settings.backend_cors_origins) if settings.backend_cors_origins != ["*"] else "*",
+        "Access-Control-Allow-Methods": ", ".join(settings.cors_allow_methods),
+        "Access-Control-Allow-Headers": ", ".join(settings.cors_allow_headers),
+        "Access-Control-Max-Age": "600",
+    }
+    return Response(status_code=204, headers=cors_headers)
 
 
 @app.get("/health")
