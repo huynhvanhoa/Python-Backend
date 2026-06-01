@@ -54,11 +54,11 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        # Prefer project .env over machine/user env vars to avoid accidental overrides.
+        # Prefer environment variables over project .env in production deployments.
         return (
             init_settings,
-            dotenv_settings,
             env_settings,
+            dotenv_settings,
             file_secret_settings,
         )
 
