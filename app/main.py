@@ -19,21 +19,6 @@ error_logger = logging.getLogger("app.error")
 
 app = FastAPI(title=settings.app_name)
 
-# Handle OPTIONS preflight explicitly before CORS middleware (workaround for Render/Cloudflare)
-@app.middleware("http")
-async def handle_options_preflight(request: Request, call_next):
-    if request.method == "OPTIONS":
-        return Response(
-            status_code=204,
-            headers={
-                "Access-Control-Allow-Origin": ", ".join(settings.backend_cors_origins) if settings.backend_cors_origins != ["*"] else "*",
-                "Access-Control-Allow-Methods": ", ".join(settings.cors_allow_methods),
-                "Access-Control-Allow-Headers": ", ".join(settings.cors_allow_headers),
-                "Access-Control-Max-Age": "600",
-            },
-        )
-    return await call_next(request)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.backend_cors_origins,
@@ -89,6 +74,18 @@ async def request_id_and_access_log_middleware(request: Request, call_next):
 
 
 app.include_router(upload_router, prefix=settings.api_v1_prefix)
+
+
+# Catch-all OPTIONS route with highest priority for CORS preflight
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    cors_headers = {
+        "Access-Control-Allow-Origin": ", ".join(settings.backend_cors_origins) if settings.backend_cors_origins != ["*"] else "*",
+        "Access-Control-Allow-Methods": ", ".join(settings.cors_allow_methods),
+        "Access-Control-Allow-Headers": ", ".join(settings.cors_allow_headers),
+        "Access-Control-Max-Age": "600",
+    }
+    return Response(status_code=204, headers=cors_headers)
 
 
 @app.get("/health")
