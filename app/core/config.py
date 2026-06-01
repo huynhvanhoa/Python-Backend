@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     # Observability
     log_level: str = "INFO"
 
+    # Cross-origin access for frontend admin UI.
+    backend_cors_origins: list[str] = ["*"]
+    cors_allow_methods: list[str] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    cors_allow_headers: list[str] = ["*"]
+
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parents[2] / ".env"),
         env_file_encoding="utf-8",
