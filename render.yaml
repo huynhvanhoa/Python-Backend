@@ -19,5 +19,7 @@ services:
         sync: false
       - key: ALLOW_INSECURE_ADMIN
         value: 'false'
+      - key: BACKEND_CORS_ORIGINS
+        value: 'http://localhost:3000'
       - key: LOG_LEVEL
         value: 'INFO'
