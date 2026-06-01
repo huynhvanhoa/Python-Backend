@@ -1,5 +1,7 @@
 from pathlib import Path
+import json
 
+from pydantic import field_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -49,6 +51,23 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         extra="ignore",
     )
+
+    @field_validator("backend_cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse BACKEND_CORS_ORIGINS from env var (JSON array or comma-separated string)."""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            # Try to parse as JSON first
+            if v.startswith("["):
+                try:
+                    return json.loads(v)
+                except json.JSONDecodeError:
+                    pass
+            # Fall back to comma-separated parsing
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return ["*"]
 
     @classmethod
     def settings_customise_sources(
